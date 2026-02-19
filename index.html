@@ -13,7 +13,7 @@
         .writing-line { border-bottom: 2px dashed #cbd5e1; height: 2.8rem; margin-top: 0.5rem; }
         .no-print-btn { transition: all 0.2s; }
         .no-print-btn:hover { transform: translateY(-2px); }
-
+2
         /* 분수 및 세로셈 렌더링용 CSS */
         .math-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; font-size: 0.85em; margin: 0 0.2rem; line-height: 1.1; }
         .math-frac .num { border-bottom: 2px solid #334155; padding: 0 0.15rem; width: 100%; text-align: center; }
@@ -22,6 +22,78 @@
         .math-long-div { display: inline-flex; align-items: flex-end; vertical-align: middle; line-height: 1.1; margin: 0 0.3rem; font-size: 1.1em; }
         .math-long-div .divisor { padding-right: 0.25rem; }
         .math-long-div .dividend { border-top: 2px solid #334155; border-left: 2px solid #334155; padding: 0.1rem 0.3rem 0 0.3rem; border-top-left-radius: 4px; }
+
+        /* 세로셈 큼직하게 및 버튼형 입력창 */
+        .vert-div-container {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin: 1rem 0;
+            font-size: 2rem; /* 큼직하게 */
+            position: relative;
+        }
+        .vert-div-quotient {
+            min-width: 3rem;
+            height: 3rem;
+            border: 2px dashed #indigo-300;
+            border-radius: 0.5rem;
+            margin-bottom: 0.3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background: #f0f4ff;
+            color: #6366f1;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        .vert-div-quotient:hover {
+            background: #e0e7ff;
+            transform: scale(1.05);
+        }
+        .vert-div-body {
+            display: flex;
+            align-items: center;
+            border-top: 4px solid #334155;
+            padding-top: 0.2rem;
+        }
+        .vert-div-divisor {
+            border-right: 4px solid #334155;
+            padding-right: 0.6rem;
+            margin-right: 0.6rem;
+            border-top-right-radius: 0.8rem;
+        }
+        .vert-div-dividend {
+            padding-left: 0.2rem;
+        }
+
+        /* 가상 키패드 */
+        .keypad {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            z-index: 1000;
+            border: 2px solid #e2e8f0;
+            display: none;
+        }
+        .keypad button {
+            width: 50px;
+            height: 50px;
+            background: #f8fafc;
+            border-radius: 12px;
+            font-weight: bold;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        .keypad button:hover { background: #f1f5f9; }
+        .keypad .key-enter { background: #6366f1; color: white; }
 
         /* 인쇄 최적화 */
         @media print {
@@ -164,6 +236,14 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div id="keypad" class="keypad no-print">
+        <button onclick="addNum(1)">1</button><button onclick="addNum(2)">2</button><button onclick="addNum(3)">3</button>
+        <button onclick="addNum(4)">4</button><button onclick="addNum(5)">5</button><button onclick="addNum(6)">6</button>
+        <button onclick="addNum(7)">7</button><button onclick="addNum(8)">8</button><button onclick="addNum(9)">9</button>
+        <button onclick="clearNum()" class="bg-red-50 text-red-600">C</button><button onclick="addNum(0)">0</button>
+        <button onclick="closeKeypad()" class="key-enter">OK</button>
     </div>
 
     <script>
@@ -327,6 +407,7 @@
         const quotes = Array.from({length: 200}, (_, i) => baseQuotes[i % baseQuotes.length]);
 
         let mCnt = 20, wLine = 5;
+        let activeInput = null;
 
         window.onload = () => {
             document.getElementById('view-date').innerText = new Date().toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
@@ -376,9 +457,34 @@
         }
         function renderDiv(dividend, divisor) {
             if(document.getElementById('check-vert').checked) {
-                return `<span class="math-long-div"><span class="divisor">${divisor}</span><span class="dividend">${dividend}</span></span>`;
+                return `
+                <div class="vert-div-container">
+                    <div class="vert-div-quotient no-print" onclick="openKeypad(this)">?</div>
+                    <div class="vert-div-body">
+                        <span class="vert-div-divisor">${divisor}</span>
+                        <span class="vert-div-dividend">${dividend}</span>
+                    </div>
+                </div>`;
             }
             return `${dividend} ÷ ${divisor} =`;
+        }
+
+        // --- 키패드 로직 ---
+        function openKeypad(el) {
+            activeInput = el;
+            document.getElementById('keypad').style.display = 'grid';
+        }
+        function addNum(n) {
+            if(!activeInput) return;
+            if(activeInput.innerText === '?') activeInput.innerText = '';
+            activeInput.innerText += n;
+        }
+        function clearNum() {
+            if(!activeInput) return;
+            activeInput.innerText = '?';
+        }
+        function closeKeypad() {
+            document.getElementById('keypad').style.display = 'none';
         }
 
         // --- 수학 연산 엔진 ---
@@ -453,8 +559,10 @@
         function genMath() {
             const grid = document.getElementById('math-grid'), ansGrid = document.getElementById('ans-grid');
             const g = document.getElementById('sel-g').value, sem = document.getElementById('sel-s').value, c = document.getElementById('sel-c').value;
+            const isVert = document.getElementById('check-vert').checked;
             
             grid.innerHTML = ""; ansGrid.innerHTML = "";
+            grid.className = isVert ? "grid grid-cols-1 gap-y-12 text-[1.25rem] font-bold text-gray-700 pl-4" : "grid grid-cols-2 gap-x-12 gap-y-7 text-[1.25rem] font-bold text-gray-700 pl-4";
             
             if(c === 'all') {
                 document.getElementById('math-title').innerText = "전단원 혼합 복습";
@@ -464,7 +572,8 @@
                     const rRules = db[g][sem][rChap];
                     const rule = rRules[Math.floor(Math.random() * rRules.length)];
                     const { q, a } = getProblem(rule);
-                    grid.innerHTML += `<div class="flex items-center"><span class="text-lg text-gray-400 mr-2 w-6 text-right">${i}.</span>${q} <span class="flex-grow border-b-2 border-gray-400 ml-2 mt-4 inline-block"></span></div>`;
+                    const line = isVert ? "" : '<span class="flex-grow border-b-2 border-gray-400 ml-2 mt-4 inline-block"></span>';
+                    grid.innerHTML += `<div class="flex items-center"><span class="text-lg text-gray-400 mr-2 w-6 text-right">${i}.</span>${q} ${line}</div>`;
                     ansGrid.innerHTML += `<div>${i}) ${a}</div>`;
                 }
             } else {
@@ -473,7 +582,8 @@
                 document.getElementById('math-title').innerText = rule.name;
                 for(let i=1; i<=mCnt; i++) {
                     const { q, a } = getProblem(rule);
-                    grid.innerHTML += `<div class="flex items-center"><span class="text-lg text-gray-400 mr-2 w-6 text-right">${i}.</span>${q} <span class="flex-grow border-b-2 border-gray-400 ml-2 mt-4 inline-block"></span></div>`;
+                    const line = isVert ? "" : '<span class="flex-grow border-b-2 border-gray-400 ml-2 mt-4 inline-block"></span>';
+                    grid.innerHTML += `<div class="flex items-center"><span class="text-lg text-gray-400 mr-2 w-6 text-right">${i}.</span>${q} ${line}</div>`;
                     ansGrid.innerHTML += `<div>${i}) ${a}</div>`;
                 }
             }
