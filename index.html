@@ -13,7 +13,7 @@
         .writing-line { border-bottom: 2px dashed #cbd5e1; height: 2.8rem; margin-top: 0.5rem; }
         .no-print-btn { transition: all 0.2s; }
         .no-print-btn:hover { transform: translateY(-2px); }
-2
+
         /* 분수 및 세로셈 렌더링용 CSS */
         .math-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; font-size: 0.85em; margin: 0 0.2rem; line-height: 1.1; }
         .math-frac .num { border-bottom: 2px solid #334155; padding: 0 0.15rem; width: 100%; text-align: center; }
@@ -23,48 +23,49 @@
         .math-long-div .divisor { padding-right: 0.25rem; }
         .math-long-div .dividend { border-top: 2px solid #334155; border-left: 2px solid #334155; padding: 0.1rem 0.3rem 0 0.3rem; border-top-left-radius: 4px; }
 
-        /* 세로셈 큼직하게 및 버튼형 입력창 */
+        /* 세로셈 큼직하게 및 쓰기 칸 확보 */
         .vert-div-container {
             display: inline-flex;
             flex-direction: column;
             align-items: flex-end;
-            margin: 1rem 0;
-            font-size: 2rem; /* 큼직하게 */
+            margin: 2rem 0;
+            font-size: 2.8rem; /* 더 큼직하게 */
             position: relative;
         }
         .vert-div-quotient {
-            min-width: 3rem;
-            height: 3rem;
-            border: 2px dashed #indigo-300;
-            border-radius: 0.5rem;
-            margin-bottom: 0.3rem;
+            min-width: 4.5rem;
+            height: 4.5rem;
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.8rem;
+            margin-bottom: 0.5rem;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            background: #f0f4ff;
+            background: #ffffff;
             color: #6366f1;
             transition: all 0.2s;
             font-weight: bold;
         }
         .vert-div-quotient:hover {
-            background: #e0e7ff;
-            transform: scale(1.05);
+            background: #f8fafc;
+            border-color: #6366f1;
         }
         .vert-div-body {
             display: flex;
             align-items: center;
-            border-top: 4px solid #334155;
-            padding-top: 0.2rem;
+            border-top: 5px solid #334155;
+            padding-top: 0.4rem;
         }
         .vert-div-divisor {
-            border-right: 4px solid #334155;
-            padding-right: 0.6rem;
-            margin-right: 0.6rem;
-            border-top-right-radius: 0.8rem;
+            border-right: 5px solid #334155;
+            padding-right: 0.8rem;
+            margin-right: 0.8rem;
+            border-top-right-radius: 1.2rem;
         }
         .vert-div-dividend {
-            padding-left: 0.2rem;
+            padding-left: 0.4rem;
+            letter-spacing: 0.2rem;
         }
 
         /* 가상 키패드 */
@@ -75,7 +76,7 @@
             background: white;
             padding: 15px;
             border-radius: 20px;
-            shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
@@ -95,6 +96,21 @@
         .keypad button:hover { background: #f1f5f9; }
         .keypad .key-enter { background: #6366f1; color: white; }
 
+        /* 로고 업로드 영역 */
+        .logo-drop-zone {
+            border: 2px dashed #e2e8f0;
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+        .logo-drop-zone:hover {
+            border-color: #6366f1;
+            background: #f0f4ff;
+        }
+
         /* 인쇄 최적화 */
         @media print {
             body { background-color: white; margin: 0; padding: 0; }
@@ -106,6 +122,7 @@
                 box-shadow: none; border: none;
             }
             .layout-container { display: block !important; }
+            .vert-div-quotient { border: 2px solid #cbd5e1; background: none; }
             @page { margin: 10mm; }
         }
     </style>
@@ -123,6 +140,14 @@
             <div class="mb-5">
                 <label class="block text-sm font-bold text-gray-500 mb-2 ml-1">학습지 제목</label>
                 <input type="text" id="input-title" class="w-full border-2 border-gray-100 p-3 rounded-2xl font-bold text-gray-700 focus:border-indigo-400 outline-none" oninput="saveTitle()" placeholder="한 장 델린이">
+            </div>
+
+            <div class="mb-5">
+                <label class="block text-sm font-bold text-gray-500 mb-2 ml-1">로고 변경 (이미지 업로드)</label>
+                <div class="logo-drop-zone" id="drop-zone" onclick="document.getElementById('logo-upload').click()">
+                    <p class="text-xs text-gray-400 font-bold">클릭하여 이미지 선택 또는 파일을 끌어오세요</p>
+                </div>
+                <input type="file" id="logo-upload" class="hidden" accept="image/*" onchange="handleLogoUpload(this.files[0])">
             </div>
 
             <div class="grid grid-cols-3 gap-2 mb-5">
@@ -189,7 +214,12 @@
                 
                 <div class="flex justify-between items-start border-b-4 border-yellow-400 pb-5 mb-10">
                     <div class="flex items-center gap-5">
-                        <img id="logo-img" src="https://api.dicebear.com/7.x/bottts/svg?seed=Pro&backgroundColor=e2e8f0" class="w-20 h-20 object-contain rounded-2xl bg-gray-50 border border-gray-200">
+                        <div class="relative group">
+                            <img id="logo-img" src="https://api.dicebear.com/7.x/bottts/svg?seed=Pro&backgroundColor=e2e8f0" class="w-20 h-20 object-contain rounded-2xl bg-gray-50 border border-gray-200 cursor-pointer" onclick="document.getElementById('logo-upload').click()">
+                            <div class="no-print absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-2xl transition-opacity pointer-events-none">
+                                <span class="text-white text-[10px] font-bold">변경</span>
+                            </div>
+                        </div>
                         <div>
                             <h1 id="view-title" class="title-font text-indigo-700 leading-none">한 장 델린이</h1>
                             <p id="view-date" class="text-gray-400 font-bold text-sm mt-3 tracking-wide"></p>
@@ -396,7 +426,7 @@
             {q: "실패를 두려워하지 말고, 시도하지 않음을 두려워하라.", a: "로이 J. 스미스"},
             {q: "가장 큰 위험은 위험을 감수하지 않는 것이다.", a: "마크 저커버그"},
             {q: "어제와 똑같이 살면서 다른 미래를 기대하는 것은 정신병의 초기 증상이다.", a: "알베르트 아인슈타인"},
-            {q: "매일 조금씩 나아지는 것이, 한 번에 크게 변하는 것보다 낫다.", a: "Pro 델린이"},
+            {q: "매일 조금씩 나아지는 것이, 한 번에 크게 변하는 것보다낫다.", a: "Pro 델린이"},
             {q: "천재는 1%의 영감과 99%의 땀으로 이루어진다.", a: "토머스 에디슨"},
             {q: "시작하는 방법은 그만 말하고 이제 행동하는 것이다.", a: "월트 디즈니"},
             {q: "당신이 할 수 있다고 믿든 할 수 없다고 믿든, 믿는 대로 될 것이다.", a: "헨리 포드"},
@@ -416,12 +446,34 @@
             document.getElementById('view-title').innerText = sTitle;
             
             initSel(); genQuote(); genTopic(); drawLines();
+            initDragDrop();
         };
 
         function saveTitle() {
             const val = document.getElementById('input-title').value || "한 장 델린이";
             document.getElementById('view-title').innerText = val;
             localStorage.setItem('pro_title', val);
+        }
+
+        // --- 로고 업로드 로직 ---
+        function handleLogoUpload(file) {
+            if(!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('logo-img').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function initDragDrop() {
+            const zone = document.getElementById('drop-zone');
+            zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('border-indigo-400', 'bg-indigo-50'); });
+            zone.addEventListener('dragleave', () => { zone.classList.remove('border-indigo-400', 'bg-indigo-50'); });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('border-indigo-400', 'bg-indigo-50');
+                handleLogoUpload(e.dataTransfer.files[0]);
+            });
         }
 
         // --- 4단계 드롭다운 로직 (전단원 복습 포함) ---
@@ -459,7 +511,7 @@
             if(document.getElementById('check-vert').checked) {
                 return `
                 <div class="vert-div-container">
-                    <div class="vert-div-quotient no-print" onclick="openKeypad(this)">?</div>
+                    <div class="vert-div-quotient" onclick="openKeypad(this)"></div>
                     <div class="vert-div-body">
                         <span class="vert-div-divisor">${divisor}</span>
                         <span class="vert-div-dividend">${dividend}</span>
@@ -476,12 +528,11 @@
         }
         function addNum(n) {
             if(!activeInput) return;
-            if(activeInput.innerText === '?') activeInput.innerText = '';
             activeInput.innerText += n;
         }
         function clearNum() {
             if(!activeInput) return;
-            activeInput.innerText = '?';
+            activeInput.innerText = '';
         }
         function closeKeypad() {
             document.getElementById('keypad').style.display = 'none';
@@ -562,7 +613,7 @@
             const isVert = document.getElementById('check-vert').checked;
             
             grid.innerHTML = ""; ansGrid.innerHTML = "";
-            grid.className = isVert ? "grid grid-cols-1 gap-y-12 text-[1.25rem] font-bold text-gray-700 pl-4" : "grid grid-cols-2 gap-x-12 gap-y-7 text-[1.25rem] font-bold text-gray-700 pl-4";
+            grid.className = isVert ? "grid grid-cols-1 gap-y-16 text-[1.25rem] font-bold text-gray-700 pl-4" : "grid grid-cols-2 gap-x-12 gap-y-7 text-[1.25rem] font-bold text-gray-700 pl-4";
             
             if(c === 'all') {
                 document.getElementById('math-title').innerText = "전단원 혼합 복습";
